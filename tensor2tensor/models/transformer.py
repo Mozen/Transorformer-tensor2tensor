@@ -464,7 +464,7 @@ class Transformer(t2t_model.T2TModel):
             ret["outputs"] = ret["outputs"][:, partial_targets_length:]
         return ret
 
-    def _fast_decode(self,
+    def _fast_decode_fast_decode(self,
                      features,
                      decode_length,
                      beam_size=1,

@@ -111,7 +111,8 @@ class T2TModel(base.Layer):
 
         if not problem_hparams and hasattr(hparams, "problem_hparams"):
             problem_hparams = hparams.problem_hparams
-        self._problem_hparams = problem_hparams
+        self._problem_hparams = problem_hparams # 这个肯定会有吧
+        
 
         # Setup hparams
         # If vocabularies differ, unset shared_embedding_and_softmax_weights.
@@ -654,14 +655,18 @@ class T2TModel(base.Layer):
                 log_warn("Non-random sampling for a model with no inputs.")
             # 如果没有输入的话，用 O 填充
             self._fill_problem_hparams_features(features)
-
+            
+            # 一定会有，但是具体的还需要验证是什么。。
             if self._problem_hparams:
                 target_modality = self._problem_hparams.target_modality
                 if target_modality.is_class_modality:
                     beam_size = 1  # No use to run beam-search for a single class.
+            
+            # 今天重点看看 Greedy 和 Beam 的代码区别
             if beam_size == 1:
                 log_info("Greedy Decoding")
                 results = self._greedy_infer(features, decode_length, use_tpu)
+                
             else:
                 log_info("Beam Decoding with beam size %d" % beam_size)
                 results = self._beam_decode(features, decode_length, beam_size,
@@ -986,10 +991,14 @@ class T2TModel(base.Layer):
         """
         if not features:
             features = {}
+            
         inputs_old = None
+        
         if "inputs" in features and len(features["inputs"].shape) < 4:
             inputs_old = features["inputs"]
             features["inputs"] = tf.expand_dims(features["inputs"], 2)
+            
+            
         if not self.has_input:
             # Prepare partial targets.
             # In either features["inputs"] or features["targets"].
@@ -998,6 +1007,7 @@ class T2TModel(base.Layer):
             if partial_targets is None:
                 partial_targets = features["targets"]
             features["partial_targets"] = tf.to_int64(partial_targets)
+        
         # Save the targets in a var and reassign it after the tf.while loop to avoid
         # having targets being in a 'while' frame. This ensures targets when used
         # in metric functions stays in the same frame as other vars.
@@ -1053,6 +1063,7 @@ class T2TModel(base.Layer):
                 initial_output = tf.zeros((batch_size, 0, 1, dim), dtype=tf.float32)
             else:
                 initial_output = tf.zeros((batch_size, 0, 1, 1), dtype=tf.int64)
+        
         # Hack: foldl complains when the output shape is less specified than the
         # input shape, so we confuse it about the input shape.
         initial_output = tf.slice(initial_output, [0, 0, 0, 0],
