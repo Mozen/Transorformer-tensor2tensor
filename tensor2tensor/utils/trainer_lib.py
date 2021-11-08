@@ -230,6 +230,7 @@ def create_estimator(model_name,
                      use_tpu_estimator=False,
                      use_xla=False):
   """Create a T2T Estimator."""
+  # model_fn 使用了一个闭包处理 model 的过程
   model_fn = t2t_model.T2TModel.make_estimator_model_fn(
       model_name, hparams, decode_hparams=decode_hparams)
 
@@ -253,6 +254,7 @@ def create_estimator(model_name,
         eval_batch_size=batch_size if "eval" in schedule else None,
         predict_batch_size=predict_batch_size)
   else:
+    # 回去看下这个问题，关于 Estimator 写一篇文章
     estimator = tf.estimator.Estimator(
         model_fn=model_fn,
         model_dir=run_config.model_dir,

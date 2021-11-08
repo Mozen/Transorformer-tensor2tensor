@@ -114,6 +114,7 @@ def score_file(filename):
     batch_inputs = tf.reshape(inputs_ph, [1, -1, 1, 1])  # Make it 4D.
   targets_ph = tf.placeholder(dtype=tf.int32)  # Just length dimension.
   batch_targets = tf.reshape(targets_ph, [1, -1, 1, 1])  # Make it 4D.
+
   features = {
       "inputs": batch_inputs,
       "targets": batch_targets,
